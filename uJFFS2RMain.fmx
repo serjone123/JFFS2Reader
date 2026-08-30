@@ -1,12 +1,14 @@
-object Form1: TForm1
+object fmJFFS2Reader: TfmJFFS2Reader
   Left = 0
   Top = 0
-  Caption = 'Form1'
+  Caption = 'JFFS2Reader'
   ClientHeight = 480
   ClientWidth = 640
+  StyleBook = StyleBook1
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignerMasterStyle = 0
   object openDialog: TOpenDialog
@@ -15,7 +17,6 @@ object Form1: TForm1
   end
   object tvFiles: TTreeView
     Align = Client
-    PopupMenu = PopupMenu
     Size.Width = 284.000000000000000000
     Size.Height = 458.000000000000000000
     Size.PlatformDefault = False
@@ -121,14 +122,25 @@ object Form1: TForm1
         item
         end>
       Align = Bottom
-      Position.Y = 408.000000000000000000
+      Position.Y = 336.000000000000000000
       Size.Width = 296.000000000000000000
-      Size.Height = 50.000000000000000000
+      Size.Height = 122.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+    end
+    object Splitter2: TSplitter
+      Align = Bottom
+      Cursor = crVSplit
+      MinSize = 20.000000000000000000
+      Position.Y = 333.000000000000000000
+      Size.Width = 296.000000000000000000
+      Size.Height = 3.000000000000000000
       Size.PlatformDefault = False
       Visible = False
     end
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 201
     Top = 248
     object miSaveFile: TMenuItem
@@ -137,5 +149,10 @@ object Form1: TForm1
     object miSaveFileWithPath: TMenuItem
       Text = 'miSaveFileWithPath'
     end
+  end
+  object StyleBook1: TStyleBook
+    Styles = <
+      item
+      end>
   end
 end

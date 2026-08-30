@@ -73,6 +73,16 @@ type
     Compression: string;     // человекочитаемый список кодеков, встретившихся во фрагментах
   end;
 
+  // Общая статистика по всему открытому образу.
+  TFSStats = record
+    ImageSize: Int64;
+    FileCount: Integer;
+    DirCount: Integer;
+  end;
+
+  // Колбэк прогресса разбора образа. Position/Total — байты.
+  TJFFS2ProgressEvent = procedure(Sender: TObject; Position, Total: Int64) of object;
+
   TFileFragment = record
     Offset: Cardinal;   // смещение фрагмента внутри файла
     Version: Cardinal;  // версия узла (порядок применения фрагментов)
@@ -101,6 +111,8 @@ type
     FCRCTable: array [0 .. 255] of Cardinal;
     FRootIno: Cardinal;
     FPathIndex: TDictionary<string, Cardinal>; // путь -> ino, строится в GetFileList
+    FOnProgress: TJFFS2ProgressEvent;
+    FParsed: Boolean;
 
     procedure InitCRCTable;
     function CRC32Buf(const Buffer; Len: Integer): Cardinal;
@@ -132,6 +144,12 @@ type
     constructor Create(const AFileName: string);
     destructor Destroy; override;
 
+    // Собственно разбор образа. Не вызывается автоматически из Create —
+    // так вызывающий код успевает подписаться на OnProgress до начала
+    // (обычно долгой) операции. GetFileList/ReadFileData и т.п. вызовут
+    // Parse сами, если он ещё не был вызван явно.
+    procedure Parse;
+
     function GetFileList: TArray<string>;
 
     // Возвращает содержимое файла по пути, полученному из GetFileList.
@@ -140,6 +158,9 @@ type
     // Свойства файла/каталога без загрузки и сборки содержимого —
     // дёшево вызывать перед тем, как решать, показывать превью или нет.
     function GetItemProps(const DisplayPath: string): TFSItemProps;
+
+    // Общая статистика по образу (кол-во файлов/папок, размер образа).
+    function GetStats: TFSStats;
 
     // Грубая эвристика: похожи ли байты на текст (нет NUL-байтов, мало
     // "мусорных" непечатаемых символов в начале файла).
@@ -156,6 +177,9 @@ type
     procedure ExtractAll(const OutputDir: string);
 
     procedure AnalyzeToStrings(Lines: TStrings);
+
+    // Вызывается во время Parse: Position/Total в байтах образа.
+    property OnProgress: TJFFS2ProgressEvent read FOnProgress write FOnProgress;
   end;
 
 implementation
@@ -186,7 +210,16 @@ begin
   FItems := TObjectDictionary<Cardinal, TFSItem>.Create([doOwnsValues]);
   FRootIno := 1;
   FPathIndex := nil;
+  FParsed := False;
+  // Разбор НЕ запускаем здесь — вызывающий код должен успеть подписаться
+  // на OnProgress перед вызовом Parse (или дать его вызвать лениво).
+end;
+
+procedure TJFFS2Parser.Parse;
+begin
+  if FParsed then Exit;
   ParseStream;
+  FParsed := True;
 end;
 
 destructor TJFFS2Parser.Destroy;
@@ -479,15 +512,23 @@ end;
   Main parse loop
   --------------------------------------------------------------------------- }
 procedure TJFFS2Parser.ParseStream;
+const
+  PROGRESS_STEP = 65536; // не дёргаем колбэк на каждый узел — раз в 64 КБ продвижения
 var
-  Pos: Int64;
+  Pos, LastReportedPos, StreamSize: Int64;
   NodeType: Word;
   TotLen: Cardinal;
   NodeData: TBytes;
 begin
   FItems.Clear;
   Pos := 0;
-  while Pos + 12 <= FStream.Size do
+  LastReportedPos := 0;
+  StreamSize := FStream.Size;
+
+  if Assigned(FOnProgress) then
+    FOnProgress(Self, 0, StreamSize);
+
+  while Pos + 12 <= StreamSize do
   begin
     if ReadNode(Pos, NodeType, TotLen, NodeData) then
     begin
@@ -499,7 +540,16 @@ begin
     end
     else
       Inc(Pos); // ищем следующее совпадение магии $1985 побайтово (флеш выровнен, но между узлами бывает $FF-заполнение)
+
+    if Assigned(FOnProgress) and (Pos - LastReportedPos >= PROGRESS_STEP) then
+    begin
+      FOnProgress(Self, Pos, StreamSize);
+      LastReportedPos := Pos;
+    end;
   end;
+
+  if Assigned(FOnProgress) then
+    FOnProgress(Self, StreamSize, StreamSize);
 end;
 
 { ---------------------------------------------------------------------------
@@ -586,8 +636,7 @@ var
   RootIno: Cardinal;
   ResultList: TStringList;
 begin
-  if FItems.Count = 0 then
-    ParseStream;
+  Parse; // на случай, если вызывающий код не вызвал Parse явно (напр., для маленьких образов)
 
   FreeAndNil(FPathIndex);
   FPathIndex := TDictionary<string, Cardinal>.Create;
@@ -712,6 +761,23 @@ begin
     finally
       Codecs.Free;
     end;
+  end;
+end;
+
+function TJFFS2Parser.GetStats: TFSStats;
+var
+  Item: TFSItem;
+begin
+  Parse;
+  FillChar(Result, SizeOf(Result), 0);
+  Result.ImageSize := FStream.Size;
+  for Item in FItems.Values do
+  begin
+    if Item.Ino = FRootIno then Continue;
+    if Item.IsDirectory then
+      Inc(Result.DirCount)
+    else
+      Inc(Result.FileCount);
   end;
 end;
 
