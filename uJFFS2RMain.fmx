@@ -1,0 +1,141 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 480
+  ClientWidth = 640
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object openDialog: TOpenDialog
+    Left = 112
+    Top = 168
+  end
+  object tvFiles: TTreeView
+    Align = Client
+    PopupMenu = PopupMenu
+    Size.Width = 284.000000000000000000
+    Size.Height = 458.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    OnChange = tvFilesChange
+    Viewport.Width = 280.000000000000000000
+    Viewport.Height = 454.000000000000000000
+  end
+  object Layout1: TLayout
+    Align = Left
+    Size.Width = 57.000000000000000000
+    Size.Height = 458.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object btnOpenFile: TButton
+      Align = Top
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Position.X = 4.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 49.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Open'
+      TextSettings.Trimming = None
+      OnClick = btnOpenFileClick
+    end
+    object btnExtractClick: TButton
+      Align = Top
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Position.X = 4.000000000000000000
+      Position.Y = 30.000000000000000000
+      Size.Width = 49.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Extract'
+      TextSettings.Trimming = None
+      OnClick = btnExtractClickClick
+    end
+  end
+  object saveDialog: TSaveDialog
+    Left = 105
+    Top = 248
+  end
+  object Splitter1: TSplitter
+    Align = Right
+    Cursor = crHSplit
+    MinSize = 20.000000000000000000
+    Position.X = 341.000000000000000000
+    Size.Width = 3.000000000000000000
+    Size.Height = 458.000000000000000000
+    Size.PlatformDefault = False
+  end
+  object StatusBar1: TStatusBar
+    Position.Y = 458.000000000000000000
+    ShowSizeGrip = True
+    Size.Width = 640.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 6
+    object ProgressBar: TProgressBar
+      Align = Right
+      Orientation = Horizontal
+      Margins.Right = 25.000000000000000000
+      Position.X = 515.000000000000000000
+      Size.Width = 100.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object lbStatus: TLabel
+      Align = Client
+      Size.Width = 515.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+    end
+  end
+  object Layout2: TLayout
+    Align = Right
+    Position.X = 344.000000000000000000
+    Size.Width = 296.000000000000000000
+    Size.Height = 458.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 7
+    object memoContent: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      Align = Client
+      Size.Width = 296.000000000000000000
+      Size.Height = 458.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Viewport.Width = 292.000000000000000000
+      Viewport.Height = 454.000000000000000000
+    end
+    object ImagePreview: TImage
+      MultiResBitmap = <
+        item
+        end>
+      Align = Bottom
+      Position.Y = 408.000000000000000000
+      Size.Width = 296.000000000000000000
+      Size.Height = 50.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+    end
+  end
+  object PopupMenu: TPopupMenu
+    Left = 201
+    Top = 248
+    object miSaveFile: TMenuItem
+      Text = 'miSaveFile'
+    end
+    object miSaveFileWithPath: TMenuItem
+      Text = 'miSaveFileWithPath'
+    end
+  end
+end
